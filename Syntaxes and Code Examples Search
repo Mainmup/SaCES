@@ -1,0 +1,65 @@
+#Syntaxes and Code Examples Search
+
+
+#Skript Search
+options:
+	TOKEN : Your Token
+	NAME : Bot
+	Console>Read>CC: 0.1 # 0
+
+on load:
+	if "{@NAME}" parsed as bot is not set:
+		login to "{@TOKEN}" with name "{@NAME}"
+		
+on load:
+	set {skript::events::*} to contents from url "<url>" # Your event list link
+	replace all "##" and ";" with ">" in {skript::events::*}
+	replace all "<li>", "<a", "href=", "</a>", "</li>", """" with "" in {skript::events::*} 
+	replace all "&" with " " in {skript::events::*}
+	replace all " lt" with "" in {skript::events::*}
+	set {_wow} to 1
+	loop 999999 times:
+		wait {@Console>Read>CC} seconds
+		add 1 to {_wow}
+		set {skript::events::split::%{_wow}%::*} to split {skript::events::%{_wow}%} at ">"
+		send "%{skript::events::split::%{_wow}%::3}%" to console
+		if {skript::events::%{_wow}%} is not set:
+			stop loop
+			stop			
+			
+discord command sk.search [<Text>]:
+	trigger:
+		if arg 1 is set:
+			delete {_yes}
+			delete {_searching::*}
+			set {_num} to 1
+			set {_search} to 0
+			loop {skript::events::*}:	
+				add 1 to {_num}
+				set {_data::length} to length of {skript::events::split::%{_num}%::3}
+				set {_argument::length} to length of argument-1
+				set {_data::chracters} to the first (length of {skript::events::split::%{_num}%::3} - {_data::length} + {_argument::length} ) characters of {skript::events::split::%{_num}%::3}
+				if argument-1 contains {_data::chracters}:
+					set {_yes} to true
+					add 1 to {_search}
+					set {_searching::%{_search}%} to {skript::events::split::%{_num}%::3}
+				if loop-value is not set:
+					stop loop
+			if {_yes} is set:
+				set {_maxcl} to 0
+				loop {_searching::*}:
+					add 1 to {_maxcl}
+					set {_bulunanlarloop::%{_maxcl}%} to "[%{_maxcl}%] -> %{_searching::%{_maxcl}%}%%nl%"
+					if {_maxcl} is 10:
+						stop loop
+				set {_bulunanlar} to "%{_bulunanlarloop::*}%"
+				replace all ",", "and" with "" in {_bulunanlar}
+				create embed:
+					set the title of embed to title with text "Searching (%size of {_searching::*}%)"	
+					set the colour of the embed to Dark Green
+					set the description of embed to "%{_bulunanlar}%"
+					send the last created embed to event-channel with "{@NAME}" and store the message in {_message}	
+			else:	
+				reply with "I did not find a keyword about the word you wrote, the letter %mention tag of event-member%."					
+			stop
+											
